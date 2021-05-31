@@ -1,0 +1,49 @@
+﻿@page "/login"
+@layout LayoutNoMenu
+@using System.Security.Claims
+@inject IAccountService _accountService
+@inject NavigationManager _navigationManager
+
+<div>
+    <h1>!Oops you need to be login to view your dashboard</h1>
+    <div>
+        <div class="form-group">
+            <label for="inputEmail">Email Address</label>
+            <input type="email" class="form-control" id="inputEmail" @bind="@model.Email" />
+        </div>
+        <div class="form-group">
+            <label for="inputPassword">Password</label>
+            <input type="password" class="form-control" id="inputPassword" @bind="@model.Password" />
+        </div>
+        <button type="button" class="btn btn-primary" @onclick="Submit">Login</button>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private IList<Claim> userClaim
+    {
+        get
+        {
+            var auth = authenticationState.Result;
+            if (auth.User.Identity.IsAuthenticated)
+            {
+                return auth.User.Claims.ToList();
+            }
+            return new List<Claim>();
+        }
+    }
+
+    private LoginModel model = new LoginModel();
+
+    private async Task Submit() => await _accountService.LoginAsync(model);
+
+    private async Task Logout() => await _accountService.LogoutAsync();
+
+    protected override void OnInitialized()
+    {
+        model.ReturnUrl = _navigationManager.ExtractQueryStringByKey<string>("returnUrl");
+    }
+}
